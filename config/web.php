@@ -2,6 +2,7 @@
 
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
+$modules = require __DIR__ . '/modules.php';
 
 $config = [
     'id' => 'basic',
@@ -9,16 +10,16 @@ $config = [
     'bootstrap' => ['log'],
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
-        '@npm'   => '@vendor/npm-asset',
+        '@npm' => '@vendor/npm-asset',
     ],
     'components' => [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'mw_Fiu2oWYppVjq8yyugV7BNZVg7xirs',
         ],
-        'cache' => [
-            'class' => 'yii\caching\FileCache',
-        ],
+//        'cache' => [  //TODO return
+//            'class' => 'yii\caching\FileCache',
+//        ],
         'user' => [
             'identityClass' => 'app\models\User',
             'enableAutoLogin' => false,
@@ -47,10 +48,34 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => 'v1/auto-part',
+                ],
+                [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => 'v1/cart',
+                    'pluralize' => false,
+                    'only' => ['index', 'add'],
+                    'extraPatterns' => [
+                        'PUT <autoPartId:\d+>/<count:\d+>' => 'add',
+                    ],
+                ],
+
             ],
+        ],
+        'authManager' => [
+            'class' => 'yii\rbac\PhpManager',
+            'defaultRoles' => ['admin', 'user'],
         ],
     ],
     'params' => $params,
+    'modules' => $modules,
+    'container' => [
+        'singletons' => [
+            'app\api\common\interfaces\CartServiceInterface' => ['class' => 'app\api\common\services\CartService'],
+        ]
+    ],
 ];
 
 if (YII_ENV_DEV) {
@@ -66,7 +91,7 @@ if (YII_ENV_DEV) {
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
-        //'allowedIPs' => ['127.0.0.1', '::1'],
+//        'allowedIPs' => ['127.0.0.1', '::1', '*.*.*.*'],
     ];
 }
 
